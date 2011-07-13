@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="**/.svn/|archive/" kind="src" path="src"/>
+	<classpathentry excluding="**/.svn/" kind="src" path="src/archive"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/zcommon"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/zk"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/zul"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/zweb"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>

@@ -1,0 +1,38 @@
+Gmaps 2.0_8
+* Features:
+  1856250: Gmarker support minZoom and maxZoom
+  1995769: Gmaps onMapMove event return Bounds
+  
+* Bugs:
+  1894759: Gmaps in non-embedded Window displays incorrectly
+  1995761: Gmaps js error when change gmarker openinfo very fast
+  
+* Upgrade Notes:
+
+	--------
+Gmaps 2.0_7
+* Features:
+  1856230: Gmaps Support more configuration
+  1856240: Gmaps support G_PHYSICAL_MAP
+  1856241: Gmaps support Gpolygon component
+  1856245: Gmaps support more controls
+  1856248: Gmaps support add and remove map type
+  1861261: Gmaps suport Gimage
+
+* Bugs:
+  
+* Upgrade Notes:
+
+	--------
+Gmaps 2.0_6
+* Features:
+  1771417: Gmaps support onMapDoubleClick
+  1771418: Gmaps support Gpolyline
+  1771419: Gmarker support change icon
+  1771421: Gmarker support dragging
+  1771422: Gmarker support onMarkerDrop event
+  
+* Bugs:
+  
+* Upgrade Notes:
+  + Gmaps 2.0_6 works with ZK 3.0.0 and later only.

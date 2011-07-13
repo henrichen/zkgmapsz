@@ -1,0 +1,11 @@
+<package name="gmaps" language="xul/html" depends="zul,zk.gapi">
+	<widget name="Gmaps"/>
+	<script src="Goverlay.js"/>
+	<widget name="Ginfo"/>
+	<widget name="Gmarker"/>
+	<widget name="Gpolyline"/>
+	<widget name="Gpolygon"/>
+	<widget name="Gimage"/>
+	<widget name="Gscreen"/>
+	<script src="ext/markermanager.js"/>
+</package>
