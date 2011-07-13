@@ -1,52 +1,5 @@
 	--------
-Gmaps 2.0.52 (work with ZK 5.0+ only)
-* Features:
-
-* Bugs:
-  3294703: Gmarker doesn't open when the gmap is not located to the map
-  3299212: The initial opening of Gmarker not work if out of range.
-
-	--------
-Gmaps 2.0.51 (work with ZK 5.0+ only)
-* Features:
-
-* Bugs:
-  2929253: Gmaps partly broken if initially hidden then set visible
-  2930047: Gmaps Exception when set lat/lng to integer
-  2930482: IE8 only. Cannot dynamically createComponents of a gmap
-  2940344: Two Gmaps in one page will cause gmaker non draggable  
-  2994434: "a is null" javascript exception
-  2996368: Cannot open marker info window before added as an overlay
-  3003171: Javascript error when use <gpolygon>
-  3003173: Javascript error when use <gscreen>
-  3008462: JavaScript error when drag open info Gmarker to the far side
-  3013016: JavaScript error when open info on a Gmarker without id
-  
-	--------
-Gmaps 2.0_50 (work with ZK 5.0+ only)
-* Features:
-  2834678: MapMouseEvent support getKeys()
-  2908711: Gmaps support dynamic loading of Maps API
-  2908714: Gmaps support language attribute.
-  2908716: Gmaps support baseDomain attribute
-  2908727: Gmaps support sensor attribute  
-
-* Bugs:
-
-* Upgrade Notes:
-  + org.zkoss.gmaps.event.MapOpenEvent is no longer supported. Application users 
-    has to implement similar function by means of onClick/onRightClick and org.zkoss.zul.Popup.open()
-	in either server side or client side.
-  + org.zkoss.gmaps.event.MapClickEvent is no longer supported; use org.zkoss.gmaps.event.MapMouseEvent
-    instead.
-  + org.zkoss.gmaps.event.MarkerDropEvent is no longer supported; use org.zkoss.gmaps.event.MapDropEvent
-    instead.
-  + Since Gmaps now supports Google Ajax API, the way to provide the Google API key is a little bit different
-    from that of old version. User shall provide <script content="googleAPIkey='your-key-here'"/> or 
-	<?script content="googleAPIkey='your-key-here'" ?> in the page.
-  
-	--------
-Gmaps 2.0_12 (work with ZK 3.6.x)
+Gmaps 2.0_12 (Work with ZK 3.6.2+)
 * Features:
   2767037: Support onMapTypeChange event
   
@@ -56,7 +9,8 @@ Gmaps 2.0_12 (work with ZK 3.6.x)
   2792012: onMapRightClick of gmapz doens't work
   2813930: Memory Leak in GMaps Model clear
   2800271: ginfo dissapears when zoom level changed in gmap
-  2825734: Javascript error. zkau.cleandrop not defined (Work with ZK 3.6.2)
+  2825734: Javascript error. zkau.cleandrop not defined
+  2866238: Gmarker maxzoom should be 19(now is 17 )
   
 	--------
 Gmaps 2.0_11

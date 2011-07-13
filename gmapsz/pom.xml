@@ -1,37 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+<project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.zkoss.zkforge</groupId>
+  <groupId>org.zkoss.zkoss</groupId>
   <artifactId>gmapsz</artifactId>
-  <version>2.0.52.FL.20110504</version>
+  <version>{version}</version>
   <packaging>jar</packaging>
-  <properties>
-	<zk.version>5.0.7.FL.20110304</zk.version>
-  </properties>
-  <name>The Google Maps Component for ZK</name>
+  <name>The Google Maps Components for ZK</name>
   <url>http://www.zkoss.org</url>
-  <description>The Google Maps Component for ZK 5.0.0 or later</description>
+  <description>The Google Maps Components for ZK 3.0.0 or later</description>
+  <licenses>
+    <license>
+      <name>GNU General Public License, Version 2.0</name>
+      <url>http://www.gnu.org/licenses/gpl.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>http://zkoss.svn.sourceforge.net/viewvc/zkoss/trunk/gmapsz</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.zkoss.common</groupId>
       <artifactId>zcommon</artifactId>
-      <version>${zk.version}</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.zkoss.common</groupId>
       <artifactId>zweb</artifactId>
-      <version>${zk.version}</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.zkoss.zk</groupId>
       <artifactId>zk</artifactId>
-      <version>${zk.version}</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.zkoss.zk</groupId>
       <artifactId>zul</artifactId>
-      <version>${zk.version}</version>
+      <version>3.0.0</version>
     </dependency>
   </dependencies>
 </project> 

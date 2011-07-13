@@ -18,14 +18,17 @@ Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.gmaps;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.zkoss.lang.Objects;
+import org.zkoss.xml.HTMLs;
 
-import org.zkoss.gmaps.event.MapDropEvent;
+import org.zkoss.zk.ui.AbstractComponent;
 import org.zkoss.zk.ui.Desktop;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.UiException;
+import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zk.au.Command;
+
 import org.zkoss.zul.impl.XulElement;
 
 /**
@@ -36,7 +39,7 @@ import org.zkoss.zul.impl.XulElement;
  */
 public class Gmarker extends Ginfo {
 	private static final long serialVersionUID = 200807041527L;
-	public static final int ZOOM_LIMIT = 19; 
+	public static final int ZOOM_LIMIT = 19;
 	private String _iconImage;
 	private String _iconShadow;
 	private int _iconWidth = -100;
@@ -82,8 +85,11 @@ public class Gmarker extends Ginfo {
 	 */
 	public void setDraggingEnabled(boolean b) {
 		if (_draggingEnabled != b) {
+			if (b)
+				smartUpdate("z.dgen", true);
+			else
+				smartUpdate("z.dgen", null);
 			_draggingEnabled = b;
-			smartUpdate("draggingEnabled", b);
 		}
 	}
 
@@ -116,7 +122,7 @@ public class Gmarker extends Ginfo {
 	public void setIconAnchorX(int iconAnchorX) {
 		if (_iconAnchorX != iconAnchorX && iconAnchorX > -100) {
 			_iconAnchorX = iconAnchorX;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -137,12 +143,12 @@ public class Gmarker extends Ginfo {
 	public void setIconAnchorY(int iconAnchorY) {
 		if (_iconAnchorY != iconAnchorY && iconAnchorY > -100) {
 			_iconAnchorY = iconAnchorY;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconAnchor() {
+	private String getIconAnchor() {
 		return (getIconAnchorX() <= -100 || getIconAnchorY() <= -100) ? 
-				null : new int[] {getIconAnchorX(), getIconAnchorY()};
+				null : ""+getIconAnchorX()+","+getIconAnchorY();
 	}
 	/**
 	 * Returns the x pixel coordinate offsets (relative to the iconAnchor) of the cross image when 
@@ -162,7 +168,7 @@ public class Gmarker extends Ginfo {
 	public void setIconDragCrossAnchorX(int iconDragCrossAnchorX) {
 		if (_iconDragCrossAnchorX != iconDragCrossAnchorX && iconDragCrossAnchorX > -100) {
 			_iconDragCrossAnchorX = iconDragCrossAnchorX;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -183,31 +189,12 @@ public class Gmarker extends Ginfo {
 	public void setIconDragCrossAnchorY(int iconDragCrossAnchorY) {
 		if (_iconDragCrossAnchorY != iconDragCrossAnchorY && iconDragCrossAnchorY > -100) {
 			_iconDragCrossAnchorY = iconDragCrossAnchorY;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconDragCrossAnchor() {
+	private String getIconDragCrossAnchor() {
 		return (getIconDragCrossAnchorX() < 0 || getIconDragCrossAnchorY() < 0) ? 
-				null : new int[] {getIconDragCrossAnchorX(),getIconDragCrossAnchorY()};
-	}
-	/**
-	 * Returns the cross image URL when an icon is dragged.
-	 * @return the iconDragCrossImage
-	 * @since 2.0_6
-	 */
-	public String getIconDragCrossImage() {
-		return _iconDragCrossImage;
-	}
-	/**
-	 * Sets the cross image URL when an icon is dragged. No operation if a null value.
-	 * @param iconDragCrossImage the iconDragCrossImage to set
-	 * @since 2.0_6
-	 */
-	public void setIconDragCrossImage(String iconDragCrossImage) {
-		if (iconDragCrossImage != null && !iconDragCrossImage.equals(_iconDragCrossImage)) {
-			_iconDragCrossImage = iconDragCrossImage;
-			smartRerender();
-		}
+				null : ""+getIconDragCrossAnchorX()+","+getIconDragCrossAnchorY();
 	}
 	/**
 	 * Returns the pixel height of the cross image when an icon is dragged. 
@@ -226,7 +213,26 @@ public class Gmarker extends Ginfo {
 	public void setIconDragCrossHeight(int iconDragCrossHeight) {
 		if (_iconDragCrossHeight != iconDragCrossHeight && iconDragCrossHeight >= 0) {
 			_iconDragCrossHeight = iconDragCrossHeight;
-			smartRerender();
+			invalidate();
+		}
+	}
+	/**
+	 * Returns the cross image URL when an icon is dragged.
+	 * @return the iconDragCrossImage
+	 * @since 2.0_6
+	 */
+	public String getIconDragCrossImage() {
+		return _iconDragCrossImage;
+	}
+	/**
+	 * Sets the cross image URL when an icon is dragged. No operationi if a null value.
+	 * @param iconDragCrossImage the iconDragCrossImage to set
+	 * @since 2.0_6
+	 */
+	public void setIconDragCrossImage(String iconDragCrossImage) {
+		if (iconDragCrossImage != null && !iconDragCrossImage.equals(_iconDragCrossImage)) {
+			_iconDragCrossImage = iconDragCrossImage;
+			invalidate();
 		}
 	}
 	/**
@@ -246,12 +252,12 @@ public class Gmarker extends Ginfo {
 	public void setIconDragCrossWidth(int iconDragCrossWidth) {
 		if (_iconDragCrossWidth != iconDragCrossWidth && iconDragCrossWidth >= 0) {
 			_iconDragCrossWidth = iconDragCrossWidth;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconDragCrossSize() {
+	private String getIconDragCrossSize() {
 		return (getIconDragCrossWidth() < 0 || getIconDragCrossHeight() < 0) ? 
-				null : new int[] {getIconDragCrossWidth(),getIconDragCrossHeight()};
+				null : ""+getIconDragCrossWidth()+","+getIconDragCrossHeight();
 	}
 	/**
 	 * Returns the foreground image URL of the icon.
@@ -262,14 +268,14 @@ public class Gmarker extends Ginfo {
 		return _iconImage;
 	}
 	/**
-	 * Sets the foreground image URL of the icon. No operation if a null value.
+	 * Sets the foreground image URL of the icon. No operationi if a null value.
 	 * @param iconImage the iconImage URL to set
 	 * @since 2.0_6
 	 */
 	public void setIconImage(String iconImage) {
 		if (iconImage != null && !iconImage.equals(_iconImage)) {
 			_iconImage = iconImage;
-			smartUpdate("iconImage", encodeURL(iconImage));
+			smartUpdate("z.iimg", encodeURL(iconImage));
 		}
 	}
 	/**
@@ -283,16 +289,17 @@ public class Gmarker extends Ginfo {
 		return _iconImageMap;
 	}
 	/**
-	 * Sets an comma delimited integers representing the x/y coordinates of the image map we 
-	 * should use to specify the click-able part of the icon image in browsers other than 
-	 * Internet Explorer. No operation if a null value. 
+	 * Sets an comma delimitered integers representing the x/y coordinates of the image map we 
+	 * should use to specify the clickable part of the icon image in browsers other than 
+	 * Internet Explorer. No operationi if a null value. 
+	 * Google Maps.
 	 * @param iconImageMap the iconImageMap to set
 	 * @since 2.0_6
 	 */
 	public void setIconImageMap(String iconImageMap) {
 		if (iconImageMap != null && !iconImageMap.equals(_iconImageMap)) {
 			_iconImageMap = iconImageMap;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -313,7 +320,7 @@ public class Gmarker extends Ginfo {
 	public void setIconInfoAnchorX(int iconInfoAnchorX) {
 		if (_iconInfoAnchorX != iconInfoAnchorX && iconInfoAnchorX > -100) {
 			_iconInfoAnchorX = iconInfoAnchorX;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -334,12 +341,12 @@ public class Gmarker extends Ginfo {
 	public void setIconInfoAnchorY(int iconInfoAnchorY) {
 		if (_iconInfoAnchorY != iconInfoAnchorY && iconInfoAnchorY > -100) {
 			_iconInfoAnchorY = iconInfoAnchorY;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconInfoAnchor() {
+	private String getIconInfoAnchor() {
 		return (getIconInfoAnchorX() < 0 || getIconInfoAnchorY() < 0) ? 
-				null : new int[] {getIconInfoAnchorX(), getIconInfoAnchorY()};
+				null : ""+getIconInfoAnchorX()+","+getIconInfoAnchorY();
 	}
 	/**
 	 * Returns the distance pixels in which a marker will visually "rise" vertically when dragged. 
@@ -359,7 +366,7 @@ public class Gmarker extends Ginfo {
 	public void setIconMaxHeight(int iconMaxHeight) {
 		if (_iconMaxHeight != iconMaxHeight && iconMaxHeight >= 0) {
 			_iconMaxHeight = iconMaxHeight;
-			smartRerender();
+			invalidate();
 		}
 		
 	}
@@ -382,7 +389,7 @@ public class Gmarker extends Ginfo {
 	public void setIconMozPrintImage(String iconMozPrintImage) {
 		if (iconMozPrintImage != null && !iconMozPrintImage.equals(_iconMozPrintImage)) {
 			_iconMozPrintImage = iconMozPrintImage;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -404,7 +411,7 @@ public class Gmarker extends Ginfo {
 	public void setIconPrintImage(String iconPrintImage) {
 		if (iconPrintImage != null && !iconPrintImage.equals(_iconPrintImage)) {
 			_iconPrintImage = iconPrintImage;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -418,14 +425,14 @@ public class Gmarker extends Ginfo {
 	}
 	/**
 	 * Sets the URL of the shadow image used for printed maps. It should be a GIF image since most 
-	 * browsers cannot print PNG images. No operation if a null value.
+	 * browsers cannot print PNG images. No operationi if a null value.
 	 * @param iconPrintShadow the iconPrintShadow to set
 	 * @since 2.0_6
 	 */
 	public void setIconPrintShadow(String iconPrintShadow) {
 		if (iconPrintShadow != null && !iconPrintShadow.equals(_iconPrintShadow)) {
 			_iconPrintShadow = iconPrintShadow;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -437,14 +444,14 @@ public class Gmarker extends Ginfo {
 		return _iconShadow;
 	}
 	/**
-	 * Sets the shadow image URL of the icon. No operation if a null value.
+	 * Sets the shadow image URL of the icon. No operationi if a null value.
 	 * @param iconShadow the iconShadow to set
 	 * @since 2.0_6
 	 */
 	public void setIconShadow(String iconShadow) {
 		if (iconShadow != null && !iconShadow.equals(_iconShadow)) {
 			_iconShadow = iconShadow;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -463,7 +470,7 @@ public class Gmarker extends Ginfo {
 	public void setIconShadowHeight(int iconShadowHeight) {
 		if (_iconShadowHeight != iconShadowHeight && iconShadowHeight >= 0) {
 			_iconShadowHeight = iconShadowHeight;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -482,12 +489,12 @@ public class Gmarker extends Ginfo {
 	public void setIconShadowWidth(int iconShadowWidth) {
 		if (_iconShadowWidth != iconShadowWidth && iconShadowWidth >=0) {
 			_iconShadowWidth = iconShadowWidth;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconShadowSize() {
+	private String getIconShadowSize() {
 		return (getIconShadowWidth() < 0 || getIconShadowHeight() < 0) ? 
-				null : new int[] {getIconShadowWidth(), getIconShadowHeight()};
+				null : ""+getIconShadowWidth()+","+getIconShadowHeight();
 	}
 	/**
 	 * Returns the pixel height of the foreground image of the icon.
@@ -506,7 +513,7 @@ public class Gmarker extends Ginfo {
 	public void setIconHeight(int iconHeight) {
 		if (_iconHeight != iconHeight && iconHeight >= 0) {
 			_iconHeight = iconHeight;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -518,7 +525,10 @@ public class Gmarker extends Ginfo {
 	 * @deprecated use {@link #setIconHeight(int)} instead
 	 */
 	public void setIconSizeHeight(int iconHeight) {
-		setIconHeight(iconHeight);
+		if (_iconHeight != iconHeight && iconHeight >= 0) {
+			_iconHeight = iconHeight;
+			invalidate();
+		}
 	}
 	/**
 	 * Returns the pixel width of the foreground image of the icon.
@@ -537,12 +547,12 @@ public class Gmarker extends Ginfo {
 	public void setIconWidth(int iconWidth) {
 		if (_iconWidth != iconWidth && iconWidth >=0) {
 			_iconWidth = iconWidth;
-			smartRerender();
+			invalidate();
 		}
 	}
-	private int[] getIconSize() {
+	private String getIconSize() {
 		return (getIconWidth() < 0 || getIconHeight() < 0) ? 
-				null : new int[] {getIconWidth(), getIconHeight()};
+				null : ""+getIconWidth()+","+getIconHeight();
 	}
 	/**
 	 * Returns the URL of a virtually transparent version of the foreground 
@@ -566,12 +576,12 @@ public class Gmarker extends Ginfo {
 	public void setIconTransparent(String iconTransparent) {
 		if (iconTransparent != null && !iconTransparent.equals(_iconTransparent)) {
 			_iconTransparent = iconTransparent;
-			smartRerender();
+			invalidate();
 		}
 	}
 
 	/**
-	 * Returns the maximum visible zoom level of this Gmarker (default to 17).
+	 * Returns the maximum visible zoom level of this Gmarker (default to 19).
 	 * @since 2.0_8
 	 */
 	public int getMaxzoom() {
@@ -579,7 +589,7 @@ public class Gmarker extends Ginfo {
 	}
 	
 	/**
-	 * Sets the maximum visible zoom level of this Gmarker (max 17).
+	 * Sets the maximum visible zoom level of this Gmarker (max 19).
 	 * @since 2.0_8
 	 */
 	public void setMaxzoom(int lv) {
@@ -588,7 +598,7 @@ public class Gmarker extends Ginfo {
 		}
 		if (_maxzoom != lv) {
 			_maxzoom = lv;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -610,7 +620,7 @@ public class Gmarker extends Ginfo {
 		}
 		if (_minzoom != lv) {
 			_minzoom = lv;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -622,6 +632,73 @@ public class Gmarker extends Ginfo {
 	/*package*/ boolean isGinfo() {
 		return false;
 	}
+
+	/** Returns the HTML attributes for this tag.
+	 * <p>Used only for component development, not for application developers.
+	 * @since 2.0_6
+	 */
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(128);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		if (getIconImage() != null) {
+			HTMLs.appendAttribute(sb, "z.iimg", encodeURL(getIconImage()));
+		}
+		if (getIconShadow() != null) {
+			HTMLs.appendAttribute(sb, "z.isdw", encodeURL(getIconShadow()));
+		}
+		if (getIconSize() != null) {
+			HTMLs.appendAttribute(sb, "z.isz", getIconSize());
+		}
+		if (getIconShadowSize() != null) {
+			HTMLs.appendAttribute(sb, "z.isdwsz", getIconShadowSize());
+		}
+		if (getIconAnchor() != null) {
+			HTMLs.appendAttribute(sb, "z.ianch", getIconAnchor());
+		}
+		if (getIconInfoAnchor() != null) {
+			HTMLs.appendAttribute(sb, "z.iinfanch", getIconInfoAnchor());
+		}
+		if (getIconPrintImage() != null) {
+			HTMLs.appendAttribute(sb, "z.iprtimg", encodeURL(getIconPrintImage()));
+		}
+		if (getIconMozPrintImage() != null) {
+			HTMLs.appendAttribute(sb, "z.imozprtimg", encodeURL(getIconMozPrintImage()));
+		}
+		if (getIconPrintShadow() != null) {
+			HTMLs.appendAttribute(sb, "z.iprtsdw", encodeURL(getIconPrintShadow()));
+		}
+		if (getIconTransparent() != null) {
+			HTMLs.appendAttribute(sb, "z.itrpt", encodeURL(getIconTransparent()));
+		}
+		if (getIconImageMap() != null) {
+			HTMLs.appendAttribute(sb, "z.iimgmap", getIconImageMap());
+		}
+		if (getIconMaxHeight() >= 0) {
+			HTMLs.appendAttribute(sb, "z.imaxhgt", getIconMaxHeight());
+		}
+		if (getIconDragCrossImage() != null) {
+			HTMLs.appendAttribute(sb, "z.idrgcrsimg", encodeURL(getIconDragCrossImage()));
+		}
+		if (getIconDragCrossSize() != null) {
+			HTMLs.appendAttribute(sb, "z.idrgcrssz", getIconDragCrossSize());
+		}
+		if (getIconDragCrossAnchor() != null) {
+			HTMLs.appendAttribute(sb, "z.idrgcrsanch", getIconDragCrossAnchor());
+		}
+		if (Events.isListened(this, "onMarkerDrop", true)) {
+			HTMLs.appendAttribute(sb, "z.onMarkerDrop", "true");
+		}
+		if (isDraggingEnabled()) {
+			HTMLs.appendAttribute(sb, "z.dgen", true);
+		}
+		HTMLs.appendAttribute(sb, "z.maxz", getMaxzoom());
+		HTMLs.appendAttribute(sb, "z.minz", getMinzoom());
+
+		return sb.toString();
+	}
 	
 	/** used by the MarkerDropEvent */
 	/* package */ void setLatByClient(double lat) {
@@ -631,132 +708,4 @@ public class Gmarker extends Ginfo {
 		_lng = lng;
 	}
 	
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-
-		if (getIconImage() != null) {
-			render(renderer, "iconImage", encodeURL(getIconImage()));
-		}
-		if (getIconShadow() != null) {
-			render(renderer, "iconShadow", encodeURL(getIconShadow()));
-		}
-		if (getIconSize() != null) {
-			render(renderer, "iconSize", getIconSize());
-		}
-		if (getIconShadowSize() != null) {
-			render(renderer, "iconShadowSize", getIconShadowSize());
-		}
-		if (getIconAnchor() != null) {
-			render(renderer, "iconAnchor", getIconAnchor());
-		}
-		if (getIconInfoAnchor() != null) {
-			render(renderer, "iconInfoAnchor", getIconInfoAnchor());
-		}
-		if (getIconPrintImage() != null) {
-			render(renderer, "iconPrintImage", encodeURL(getIconPrintImage()));
-		}
-		if (getIconMozPrintImage() != null) {
-			render(renderer, "iconMozPrintImage", encodeURL(getIconMozPrintImage()));
-		}
-		if (getIconPrintShadow() != null) {
-			render(renderer, "iconPrintShadow", encodeURL(getIconPrintShadow()));
-		}
-		if (getIconTransparent() != null) {
-			render(renderer, "iconTransparent", encodeURL(getIconTransparent()));
-		}
-		if (getIconImageMap() != null) {
-			render(renderer, "iconImageMap", getIconImageMap());
-		}
-		if (getIconMaxHeight() >= 0) {
-			render(renderer, "iconMaxHeight", new Integer(getIconMaxHeight()));
-		}
-		if (getIconDragCrossImage() != null) {
-			render(renderer, "iconDragCrossImage", encodeURL(getIconDragCrossImage()));
-		}
-		if (getIconDragCrossSize() != null) {
-			render(renderer, "iconDragCrossSize", getIconDragCrossSize());
-		}
-		if (getIconDragCrossAnchor() != null) {
-			render(renderer, "iconDragCrossAnchor", getIconDragCrossAnchor());
-		}
-		if (isDraggingEnabled()) {
-			render(renderer, "draggingEnabled", true);
-		}
-		render(renderer, "maxzoom", new Integer(getMaxzoom()));
-		render(renderer, "minzoom", new Integer(getMinzoom()));
-	}
-	
-	/** Processes an AU request.
-	 *
-	 * <p>Default: in addition to what are handled by {@link XulElement#service},
-	 * it also handles onSelect.
-	 * @since 5.0.0
-	 */
-	public void service(org.zkoss.zk.au.AuRequest request, boolean everError) {
-		final String cmd = request.getCommand();
-		if (cmd.equals("onMapDrop")) {
-			final MapDropEvent evt = MapDropEvent.getMapDropEvent(request);
-			setLatByClient(evt.getLat());
-			setLngByClient(evt.getLng());
-			Events.postEvent(evt);
-		} else
-			super.service(request, everError);
-	}
-	
-	private void smartRerender() {
-		final Map info = new HashMap();
-		
-		if (getIconShadow() != null) {
-			info.put("iconShadow", encodeURL(getIconShadow()));
-		}
-		if (getIconSize() != null) {
-			info.put("iconSize", getIconSize());
-		}
-		if (getIconShadowSize() != null) {
-			info.put("iconShadowSize", getIconShadowSize());
-		}
-		if (getIconAnchor() != null) {
-			info.put("iconAnchor", getIconAnchor());
-		}
-		if (getIconInfoAnchor() != null) {
-			info.put("iconInfoAnchor", getIconInfoAnchor());
-		}
-		if (getIconPrintImage() != null) {
-			info.put("iconPrintImage", encodeURL(getIconPrintImage()));
-		}
-		if (getIconMozPrintImage() != null) {
-			info.put("iconMozPrintImage", encodeURL(getIconMozPrintImage()));
-		}
-		if (getIconPrintShadow() != null) {
-			info.put("iconPrintShadow", encodeURL(getIconPrintShadow()));
-		}
-		if (getIconTransparent() != null) {
-			info.put("iconTransparent", encodeURL(getIconTransparent()));
-		}
-		if (getIconImageMap() != null) {
-			info.put("iconImageMap", getIconImageMap());
-		}
-		if (getIconMaxHeight() >= 0) {
-			info.put("iconMaxHeight", new Integer(getIconMaxHeight()));
-		}
-		if (getIconDragCrossImage() != null) {
-			info.put("iconDragCrossImage", encodeURL(getIconDragCrossImage()));
-		}
-		if (getIconDragCrossSize() != null) {
-			info.put("iconDragCrossSize", getIconDragCrossSize());
-		}
-		if (getIconDragCrossAnchor() != null) {
-			info.put("iconDragCrossAnchor", getIconDragCrossAnchor());
-		}
-		info.put("maxzoom", new Integer(getMaxzoom()));
-		info.put("minzoom", new Integer(getMinzoom()));
-		
-		smartUpdate("rerender_", info);
-	}
-
-	//register the Gmaps related event
-	static {
-		addClientEvent(Gmarker.class, "onMapDrop", CE_DUPLICATE_IGNORE | CE_IMPORTANT);
-	}
 }

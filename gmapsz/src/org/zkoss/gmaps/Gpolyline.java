@@ -21,16 +21,13 @@ package org.zkoss.gmaps;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.zkoss.lang.Objects;
 import org.zkoss.util.CollectionsX;
+import org.zkoss.xml.HTMLs;
 import org.zkoss.zk.ui.UiException;
-import org.zkoss.zk.ui.event.Event;
-import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zul.impl.XulElement;
 /**
@@ -50,16 +47,10 @@ public class Gpolyline extends XulElement implements Mapitem {
 	private int _zoomFactor = 32; //zoom factor between polyline levels (2^5 if _numLevels == 4).
 	protected String _encodedPolyline; //cached value
 	protected String _encodedLevels; //cached value
-	private boolean _smartUpdatePoly; //whether post the smartUpdate event already?
 
 	public Gpolyline() {
-		addEventListener("onSmartUpdatePoly", new EventListener() {
-			public void onEvent(Event evt) {
-				_smartUpdatePoly = false; //reset
-				smartRerender();
-			}
-		});
 	}
+	
 	/**
 	 * Add polyline axix point.
 	 * <p>Note the polyline "level" does not correspond directly to a zoom level but they are related. 
@@ -97,23 +88,13 @@ public class Gpolyline extends XulElement implements Mapitem {
 		}
 		_points.add(new Tuple(lat, lng, level));
 
-		clearCacheAndSmartUpdate();
-	}
-	/**
-	 * mark a flag to inform that this Gpolyline needs update.
-	 */
-	protected void smartUpdatePoly() {
-		if (_smartUpdatePoly) { //already mark smart draw
-			return;
-		}
-		_smartUpdatePoly = true;
-		Events.postEvent("onSmartUpdatePoly", this, null);
+		clearCacheAndInvalidate();
 	}
 	
-	private void clearCacheAndSmartUpdate() {
+	private void clearCacheAndInvalidate() {
 		_encodedPolyline = null; //cached value
 		_encodedLevels = null; //cached value
-		smartUpdatePoly();
+		invalidate();
 	}
 	/**
 	 * Set polyline in lat,lng,level tuple(double, double, int); 
@@ -133,14 +114,10 @@ public class Gpolyline extends XulElement implements Mapitem {
 				}
 			}
 
-			clearCacheAndSmartUpdate();
+			clearCacheAndInvalidate();
 		}
 	}
 
-	private String[] getPointsAndLevels() {
-		return new String[] {getEncodedPolyline(), getEncodedLevels()};
-	}
-	
 	public String getEncodedPolyline() {
 		if (_encodedPolyline == null) {
 			int lat = 0;
@@ -196,9 +173,28 @@ public class Gpolyline extends XulElement implements Mapitem {
 		return sb.toString();
 	}
 	
+	/** Returns the HTML attributes for this tag.
+	 * <p>Used only for component development, not for application developers.
+	 */
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(128);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		HTMLs.appendAttribute(sb, "z.pts", getEncodedPolyline());
+		HTMLs.appendAttribute(sb, "z.lvs", getEncodedLevels());
+		HTMLs.appendAttribute(sb, "z.zf", getZoomFactor());
+		HTMLs.appendAttribute(sb, "z.nlvs", getNumLevels());
+		HTMLs.appendAttribute(sb, "z.cr", getColor());
+		HTMLs.appendAttribute(sb, "z.wg", getWeight());
+		HTMLs.appendAttribute(sb, "z.lop", ""+(getOpacity()/100.0));
+		HTMLs.appendAttribute(sb, "z.pid", getParent().getUuid());
+		return sb.toString();
+	}
 
 	/**
-	 * Returns the line color in form of #RRGGBB, default to #808080.
+	 * Line color in form of #RRGGBB, default to #808080.
 	 * @return the color
 	 */
 	public String getColor() {
@@ -206,38 +202,38 @@ public class Gpolyline extends XulElement implements Mapitem {
 	}
 
 	/**
-	 * Sets the line color in form of #RRGGBB, default to #808080.
+	 * Line color in form of #RRGGBB, default to #808080.
 	 * @param color the color to set
 	 */
 	public void setColor(String color) {
 		if (color == null) color = "#808080";
 		if (!color.equals(_color)) {
 			this._color = color;
-			smartRerender();
+			invalidate();
 		}
 	}
 
 	/**
-	 * Returns the line weight(width) 1 - 10, default to 5.
-	 * @return the line weight
+	 * line weight(width) 1 - 10, default to 5.
+	 * @return the weight
 	 */
 	public int getWeight() {
 		return _weight;
 	}
 
 	/**
-	 * Sets the line weight(width) 1 - 10, default to 5.
-	 * @param weight the line weight
+	 * line weight(width) 1 - 10, default to 5.
+	 * @param weight the weight to set
 	 */
 	public void setWeight(int weight) {
 		if (weight != _weight) {
 			this._weight = weight;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
 	/**
-	 * Returns the line opacity 0 - 100, default to 50.
+	 * line opacity 0 - 100, default to 50.
 	 * @return the opacity
 	 * @since 2.0_7
 	 */
@@ -246,7 +242,7 @@ public class Gpolyline extends XulElement implements Mapitem {
 	}
 
 	/**
-	 * Sets the line opacity 0 - 100, default to 50.
+	 * line opacity 0 - 100, default to 50.
 	 * @param opacity the line opacity to set
 	 * @since 2.0_7
 	 */
@@ -256,7 +252,7 @@ public class Gpolyline extends XulElement implements Mapitem {
 		}
 		if (opacity != _opacity) {
 			this._opacity = opacity;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -286,7 +282,7 @@ public class Gpolyline extends XulElement implements Mapitem {
 			//if mod is larger than numLevels / 2
 			_zoomFactor = 2 << ((mod > (numLevels >> 1)) ? (factor + 1) : factor);
 			
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -296,13 +292,8 @@ public class Gpolyline extends XulElement implements Mapitem {
 	public int getZoomFactor() {
 		return _zoomFactor;
 	}
-	
-	private int[] getNumLevelsAndZoomFactor() {
-		return new int[] {getNumLevels(), getZoomFactor()};
-	}
 
 	protected static class Tuple implements java.io.Serializable {
-		private static final long serialVersionUID = 200807041531L;
 		public double lat;
 		public double lng;
 		public int level;
@@ -312,36 +303,11 @@ public class Gpolyline extends XulElement implements Mapitem {
 			this.level = level;
 		}
 	}
-	
-	protected void prepareRerender(Map info) {
-		info.put("pointsAndLevels", getPointsAndLevels());
-		info.put("numLevelsAndZoomFactor", getNumLevelsAndZoomFactor());
-		info.put("color", getColor());
-		info.put("weight", new Integer(getWeight()));
-		info.put("opacity", new Double(getOpacity()/100.0));
-	}
 
-	protected void smartRerender() {
-		final Map info = new HashMap();
-		prepareRerender(info);
-		smartUpdate("rerender_", info);
-	}
-	
 	//-- Component --//
 	/** Default: not childable.
 	 */
 	public boolean isChildable() {
 		return false;
-	}
-	
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-		
-		render(renderer, "pointsAndLevels", getPointsAndLevels());
-		render(renderer, "numLevelsAndZoomFactor", getNumLevelsAndZoomFactor());
-		render(renderer, "color", getColor());
-		render(renderer, "weight", new Integer(getWeight()));
-		render(renderer, "opacity", new Double(getOpacity()/100.0));
 	}
 }

@@ -18,14 +18,10 @@ Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.gmaps.event;
 
-import java.util.Map;
-
 import org.zkoss.gmaps.Ginfo;
-import org.zkoss.zk.au.AuRequest;
-import org.zkoss.zk.mesg.MZk;
-import org.zkoss.zk.ui.Component;
-import org.zkoss.zk.ui.UiException;
+
 import org.zkoss.zk.ui.event.Event;
+import org.zkoss.zk.ui.Component;
 
 /**
  * Represents a Google Maps {@link org.zkoss.gmaps.Gmaps} related event which is
@@ -37,25 +33,6 @@ import org.zkoss.zk.ui.event.Event;
 public class InfoChangeEvent extends Event {
 	private final Ginfo _info;
 
-	/** Converts an AU request to a event.
-	 * @since 5.0.0
-	 */
-	public static final InfoChangeEvent getInfoChangeEvent(AuRequest request) {
-		final Component comp = request.getComponent();
-		if (comp == null)
-			throw new UiException(MZk.ILLEGAL_REQUEST_COMPONENT_REQUIRED, request);
-		final Map data = request.getData();
-		if (data == null)
-			throw new UiException(MZk.ILLEGAL_REQUEST_WRONG_DATA,
-					new Object[] {data, request});
-
-        Ginfo info = (Ginfo) request.getDesktop().getComponentByUuidIfAny((String)data.get("info"));
-        if (info != null && info.getParent() != comp) {
-            info = null;
-        }
-		return new InfoChangeEvent(request.getCommand(), comp, info);
-	}
-	
 	/** Constructs a Google Maps info window change relevant event.
 	 */
 	public InfoChangeEvent(String name, Component target, Ginfo info) {

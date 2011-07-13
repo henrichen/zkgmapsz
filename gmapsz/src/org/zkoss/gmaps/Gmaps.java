@@ -24,23 +24,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import org.zkoss.gmaps.event.InfoChangeEvent;
 import org.zkoss.gmaps.event.MapDataEvent;
 import org.zkoss.gmaps.event.MapDataListener;
-import org.zkoss.gmaps.event.MapDropEvent;
-import org.zkoss.gmaps.event.MapMouseEvent;
-import org.zkoss.gmaps.event.MapMoveEvent;
-import org.zkoss.gmaps.event.MapTypeChangeEvent;
-import org.zkoss.gmaps.event.MapZoomEvent;
-import org.zkoss.lang.Objects;
-import org.zkoss.lang.Strings;
+import org.zkoss.xml.HTMLs;
+import org.zkoss.zk.au.Command;
 import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.Express;
-import org.zkoss.zk.ui.event.SelectEvent;
+import org.zkoss.zk.ui.ext.client.Selectable;
 import org.zkoss.zul.impl.XulElement;
 
 
@@ -61,31 +56,27 @@ public class Gmaps extends XulElement {
 	private int _zoom = 13;
 	private boolean _large;
 	private boolean _small;
-	private boolean _type = true;
-	private boolean _smallZoom = true;
+	private boolean _type;
+	private boolean _smallZoom;
 	private boolean _scale;
 	private boolean _overview;
 	
 	private boolean _normal = true;
-	private boolean _satellite;
+	private boolean _satellite = true;
 	private boolean _hybrid = true;
-	private boolean _physical = true;
+	private boolean _physical;
 	
 	private String _mapType = "normal";
 	private boolean _enableDragging = true;
 	private boolean _continuousZoom;
-	private boolean _doubleClickZoom = true;
-	private boolean _scrollWheelZoom = true;
+	private boolean _doubleClickZoom;
+	private boolean _scrollWheelZoom;
 	private boolean _enableGoogleBar;
 	
 	private double _swlat = 37.418026932311111;
 	private double _swlng = -122.1933746338;
 	private double _nelat = 37.4657298516;
 	private double _nelng = -122.0903778076;
-	
-	private boolean _sensor;
-	private String _baseDomain;
-	private String _language;
 	
 	private MapModel _model;
 	private MapitemRenderer _renderer;
@@ -110,7 +101,7 @@ public class Gmaps extends XulElement {
 		}
 
 		if (update) {
-			smartUpdate("center", getCenter());
+			smartUpdate("z.center", getCenter());
 		}
 	}
 
@@ -120,7 +111,7 @@ public class Gmaps extends XulElement {
 	public void setLat(double lat) {
 		if (lat != _lat) {
 			_lat = lat;
-			smartUpdate("center", getCenter());
+			smartUpdate("z.center", getCenter());
 		}
 	}
 	
@@ -137,7 +128,7 @@ public class Gmaps extends XulElement {
 	public void setLng(double lng) {
 		if (lng != _lng) {
 			_lng = lng;
-			smartUpdate("center", getCenter());
+			smartUpdate("z.center", getCenter());
 		}
 	}
 	
@@ -148,11 +139,11 @@ public class Gmaps extends XulElement {
 		return _lng;
 	}
 	
-	/** Returns the Maps center in double[] array where [0] is lat and [1] is lng ; used by component developers
+	/** Returns the Maps center in String form lat,lng; used by component developers
 	 * only.
 	 */
-	private double[] getCenter() {
-		return new double[] {_lat, _lng};
+	private String getCenter() {
+		return ""+_lat+","+_lng;
 	}
 
 	/**
@@ -204,7 +195,7 @@ public class Gmaps extends XulElement {
 		}
 		
 		if (update) {
-			smartUpdate("panTo_", getCenter());
+			smartUpdate("z.panTo", getCenter());
 		}
 	}
 	
@@ -214,7 +205,7 @@ public class Gmaps extends XulElement {
 	public void setZoom(int zoom) {
 		if (zoom != _zoom) {
 			_zoom = zoom;
-			smartUpdate("zoom", zoom);
+			smartUpdate("z.zoom", ""+_zoom);
 		}
 	}
 	
@@ -237,7 +228,7 @@ public class Gmaps extends XulElement {
 			setShowSmallCtrl(false);
 			setShowZoomCtrl(false);
 		}
-		smartUpdate("showLargeCtrl", b);
+		smartUpdate("z.lctrl", ""+b);
 	}
 	
 	/** Returns whether show the large Google Maps Control.
@@ -259,7 +250,7 @@ public class Gmaps extends XulElement {
 			setShowLargeCtrl(false);
 			setShowZoomCtrl(false);
 		}
-		smartUpdate("showSmallCtrl", b);		
+		smartUpdate("z.sctrl", ""+b);		
 	}
 	
 	/** Returns whether show the large Google Maps Control.
@@ -282,7 +273,7 @@ public class Gmaps extends XulElement {
 			setShowLargeCtrl(false);
 			setShowSmallCtrl(false);
 		}
-		smartUpdate("showZoomCtrl", b);		
+		smartUpdate("z.zctrl", ""+b);		
 	}
 	
 	/** Returns whether show the small zoom Google Maps Control.
@@ -301,7 +292,7 @@ public class Gmaps extends XulElement {
 			return;
 		}
 		_type = b;
-		smartUpdate("showTypeCtrl", b);
+		smartUpdate("z.tctrl", ""+b);
 	}
 
 	/** Returns whether show the Google Maps type Control.
@@ -320,7 +311,7 @@ public class Gmaps extends XulElement {
 			return;
 		}
 		_scale = b;
-		smartUpdate("showScaleCtrl", b);
+		smartUpdate("z.cctrl", ""+b);
 	}
 
 	/** Returns whether show the Google Maps scale Control, default to false.
@@ -340,7 +331,7 @@ public class Gmaps extends XulElement {
 			return;
 		}
 		_overview = b;
-		smartUpdate("showOverviewCtrl", b);
+		smartUpdate("z.octrl", ""+b);
 	}
 
 	/** Returns whether show the Google Maps overview Control, default to false.
@@ -364,7 +355,7 @@ public class Gmaps extends XulElement {
 				else return; //cannot do it if no more map!
 			}
 			_normal = b;
-			smartUpdate("normal", b);
+			smartUpdate("z.nmap", b);
 		}
 	}
 	
@@ -389,7 +380,7 @@ public class Gmaps extends XulElement {
 				else return; //cannot do it if no more maps!
 			}
 			_satellite = b;
-			smartUpdate("satellite", b);
+			smartUpdate("z.smap", b);
 		}
 	}
 	
@@ -414,7 +405,7 @@ public class Gmaps extends XulElement {
 				else return; //cannot do it if no more maps!
 			}
 			_hybrid = b;
-			smartUpdate("hybrid", b);
+			smartUpdate("z.hmap", b);
 		}
 	}
 	
@@ -439,7 +430,7 @@ public class Gmaps extends XulElement {
 				else return; //cannot do it if no more maps!
 			}
 			_physical = b;
-			smartUpdate("physical", b);
+			smartUpdate("z.pmap", b);
 		}
 	}
 	
@@ -474,12 +465,9 @@ public class Gmaps extends XulElement {
 			setHybrid(true);
 		} else if ("physical".equals(mapType)) {
 			setPhysical(true);
-		} else {
-			mapType = "normal";
-			setNormal(true);
 		}
 		_mapType = mapType;
-		smartUpdate("mapType", mapType);
+		smartUpdate("z.mt", mapType);
 	}
 
 	/** Sets whether enable dragging maps by mouse, default to true.
@@ -489,7 +477,7 @@ public class Gmaps extends XulElement {
 	public void setEnableDragging(boolean b) {
 		if (_enableDragging != b) {
 			_enableDragging = b;
-			smartUpdate("enableDragging", b);
+			smartUpdate("z.dg", ""+b);
 		}
 	}
 	
@@ -508,7 +496,7 @@ public class Gmaps extends XulElement {
 	public void setContinuousZoom(boolean b) {
 		if (_continuousZoom != b) {
 			_continuousZoom = b;
-			smartUpdate("continuousZoom", b);
+			smartUpdate("z.cz", ""+b);
 		}
 	}
 	
@@ -527,7 +515,7 @@ public class Gmaps extends XulElement {
 	public void setDoubleClickZoom(boolean b) {
 		if (_doubleClickZoom != b) {
 			_doubleClickZoom = b;
-			smartUpdate("doubleClickZoom", b);
+			smartUpdate("z.dz", ""+b);
 		}
 	}
 	
@@ -546,7 +534,7 @@ public class Gmaps extends XulElement {
 	public void setScrollWheelZoom(boolean b) {
 		if (_scrollWheelZoom != b) {
 			_scrollWheelZoom = b;
-			smartUpdate("scrollWheelZoom", b);
+			smartUpdate("z.wz", ""+b);
 		}
 	}
 	
@@ -565,7 +553,7 @@ public class Gmaps extends XulElement {
 	public void setEnableGoogleBar(boolean b) {
 		if (_enableGoogleBar != b) {
 			_enableGoogleBar = b;
-			smartUpdate("enableGoogleBar", b);
+			smartUpdate("z.gb", ""+b);
 		}
 	}
 
@@ -577,101 +565,21 @@ public class Gmaps extends XulElement {
 		return _enableGoogleBar;
 	}
 	
-
-	/**
-     * Returns whether your application is using a sensor (such as a GPS locator) 
-     * to determine the user's location. This is especially important for mobile 
-     * devices; default is false.
-	 * @return whether your application is using a sensor.
-	 * @since 2.0_50
-	 */
-    public boolean isSensor() {
-		return _sensor;
-	}
-
-    /**
-     * Sets whether your application is using a sensor (such as a GPS locator) 
-     * to determine the user's location. This is especially important for mobile 
-     * devices; default is false.
-     * @param sensor whether using a sensor to determin the user's location.
-	 * @since 2.0_50
-     */
-	public void setSensor(boolean sensor) {
-		if (_sensor != sensor) {
-			this._sensor = sensor;
-			smartUpdate("sensor", sensor);
-		}
-	}
-
-	/**
-	 * Returns the base domain from which to load the Maps API. For example, 
-	 * you could load from "ditu.google.cn" with the "maps" module to get 
-	 * the Chinese version of the Maps API; null to use the default domain.
-	 * @return the user specified base domain from which to load the Maps API.
-	 * @since 2.0_50
-	 */
-	public String getBaseDomain() {
-		return _baseDomain;
-	}
-
-	/**
-	 * Sets the base domain from which to load the Maps API. For example, 
-	 * you could load from "ditu.google.cn" with the "maps" module to get 
-	 * the Chinese version of the Maps API; null to use the default domain.
-	 * @param baseDomain the base domain from which to load the Maps API
-	 * @since 2.0_50
-	 */
-	public void setBaseDomain(String baseDomain) {
-		if (!Objects.equals(_baseDomain, baseDomain)) {
-			this._baseDomain = baseDomain;
-			smartUpdate("baseDomain", baseDomain);
-		}
-	}
-
-	/**
-	 * Returns the preferred language code; default to null and means using
-	 * browser's preferred language. You can check language code 
-	 * <a href="http://spreadsheets.google.com/pub?key=p9pdwsai2hDMsLkXsoM05KQ&gid=1">here</a>
-	 * 
-	 * @return the preferred language code specified developer.
-	 * @since 2.0_50
-	 */
-	public String getLanguage() {
-		return _language;
-	}
-
-	/**
-	 * Sets the preferred language code; default to null and means using
-	 * browser's preferred language. You can check language code 
-	 * <a href="http://spreadsheets.google.com/pub?key=p9pdwsai2hDMsLkXsoM05KQ&gid=1">here</a> 
-	 * <p>By default Gmaps uses the browser's preferred language setting when 
-	 * displaying textual information such as control names, copyright, and so
-	 * one. Sets language code will make Gmaps to always use the specified
-	 * language and ignore the browser's language setting.
-	 * 
-	 * @param language the preferred language code
-	 * @since 2.0_50
-	 */
-	public void setLanguage(String language) {
-		if (!Objects.equals(_language, language)) {
-			this._language = language;
-			smartUpdate("language", language);
-		}
-	}
-
-	/** Open the specified Ginfo or Gmarker. The specified Ginfo must be child of this Gmaps.
+    /** Open the specified Ginfo or Gmarker. The specified Ginfo must be child of this Gmaps.
 	 * @param info the specified Ginfo or Gmarker.
      */
     public void openInfo(Ginfo info) {
         if (info != null) {
-	        if (info.getParent() != this) {
-	            throw new UiException("The to be opened Ginfo or Gmarker must be child of this Gmaps!");
-	        }
-	        if (_info != null) {
-	        	_info.setOpenByClient(false); //closeInfo() <-- no need to fire the command
-	        }
-	        _info = info;
-	        smartUpdate("openInfo_", info.getUuid());
+        	if (info != _info) {
+		        if (info.getParent() != this) {
+		            throw new UiException("The to be opened Ginfo or Gmarker must be child of this Gmaps!");
+		        }
+		        if (_info != null) {
+		        	_info.setOpenByClient(false); //closeInfo() <-- no need to fire the command
+		        }
+		        _info = info;
+		        smartUpdate("z.open", info.getUuid());
+        	}
         } else {
             closeInfo();
         }
@@ -680,8 +588,10 @@ public class Gmaps extends XulElement {
     /** Close the currently opened info window.
      */
     public void closeInfo() {
-    	_info = null;
-        smartUpdate("closeInfo_", "");
+        if (_info != null) {
+        	_info = null;
+            smartUpdate("z.close", "");
+        }
     }
     
 	/** Returns the currently opened info window of this Google Maps (might be Gmarker or Ginfo).
@@ -715,6 +625,11 @@ public class Gmaps extends XulElement {
 			if (_model != model) {
 				if (_model != null) {
 					_model.removeMapDataListener(_dataListener);
+				} else {
+					//20090721, Henri Chen: Shall not remove those original kids
+					//getChildren().clear();
+					//_dataMap.clear();
+					smartUpdate("z.onMapMove", "true");
 				}
 				_model = model;
 				initMapDataListener();
@@ -733,6 +648,11 @@ public class Gmaps extends XulElement {
 			_model.removeMapDataListener(_dataListener);
 			removeOnMapMove();
 			_model = null;
+			//getChildren().clear();
+			//_dataMap.clear();
+			if (!Events.isListened(this, "onMapMove", true)) {
+				smartUpdate("z.onMapMove", null);
+			}
 		}
 	}
 	private class UpdateBoundsListener implements EventListener, Express, java.io.Serializable {
@@ -913,6 +833,75 @@ public class Gmaps extends XulElement {
 		return _selected;
 	}
 	
+	/** Internal Use Only. Returns the HTML attributes for this tag.
+	 * <p>Used only for component development, not for application developers.
+	 */
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(64);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		if (Events.isListened(this, "onMapMove", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapMove", "true");
+		}
+		if (Events.isListened(this, "onMapZoom", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapZoom", "true");
+		}
+		if (Events.isListened(this, "onInfoChange", true)) {
+			HTMLs.appendAttribute(sb, "z.onInfoChange", "true");
+		}
+		if (Events.isListened(this, "onMapClick", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapClick", "true");
+		}
+		if (Events.isListened(this, "onMapDoubleClick", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapDoubleClick", "true");
+		}
+		if (Events.isListened(this, Events.ON_SELECT, true)) {
+			HTMLs.appendAttribute(sb, "z."+Events.ON_SELECT, "true");
+		}
+		if (Events.isListened(this, "onMapRightClick", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapRightClick", "true");
+		}
+		if (Events.isListened(this, "onMapTypeChange", true)) {
+			HTMLs.appendAttribute(sb, "z.onMapTypeChange", "true");
+		}
+		
+		final StringBuffer ctrls = new StringBuffer(3);
+		if (isShowLargeCtrl()) {
+			ctrls.append("l");
+		}
+		if (isShowSmallCtrl()) {
+			ctrls.append("s");
+		} 
+		if (isShowZoomCtrl()) {
+			ctrls.append("z");
+		}
+		if (isShowTypeCtrl()) {
+			ctrls.append("t");
+		}
+		if (isShowScaleCtrl()) {
+			ctrls.append("c");
+		} 
+		if (isShowOverviewCtrl()) {
+			ctrls.append("o");
+		} 
+		HTMLs.appendAttribute(sb, "z.init", getCenter()+","+_zoom+(ctrls.length() == 0 ? "" : (","+ctrls)));
+		HTMLs.appendAttribute(sb, "z.mt", getMapType());
+		HTMLs.appendAttribute(sb, "z.dg", isEnableDragging());
+		HTMLs.appendAttribute(sb, "z.cz", isContinuousZoom());
+		HTMLs.appendAttribute(sb, "z.dz", isDoubleClickZoom());
+		HTMLs.appendAttribute(sb, "z.wz", isScrollWheelZoom());
+		HTMLs.appendAttribute(sb, "z.gb", isEnableGoogleBar());
+		
+		HTMLs.appendAttribute(sb, "z.smap", isSatellite());
+		HTMLs.appendAttribute(sb, "z.hmap", isHybrid());
+		HTMLs.appendAttribute(sb, "z.pmap", isPhysical());
+		HTMLs.appendAttribute(sb, "z.nmap", isNormal());
+
+		return sb.toString();
+	}
+
 	//-- Component --//
 	public boolean insertBefore(Component child, Component insertBefore) {
         if (!(child instanceof Mapitem)) {
@@ -956,7 +945,7 @@ public class Gmaps extends XulElement {
             if (isGinfo((Component)child)) { //so it is Ginfo
                 _oneinfo = (Ginfo)child;
             }
-			if (_info != null && ((Component)child).getUuid() == _info.getUuid()) {
+			if (_info != null && ((Component)child).getId() == _info.getId()) {
 				_info = (Ginfo)child;
 				break;
 			}
@@ -1023,114 +1012,37 @@ public class Gmaps extends XulElement {
 	}
 
 	//-- ComponentCtrl --//
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-
-		if (_lat != 37.4419 || _lng != -122.1419)
-			render(renderer, "center", getCenter());
-		if (_zoom != 13)
-			render(renderer, "zoom", new Integer(getZoom()));
-		if (_large)
-			render(renderer, "showLargeCtrl", isShowLargeCtrl());
-		if (_small)
-			render(renderer, "showSmallCtrl", isShowSmallCtrl());
-		if (!_smallZoom)
-			renderer.render("showZoomCtrl", isShowZoomCtrl());
-		if (!_type)
-			renderer.render("showTypeCtrl", isShowTypeCtrl());
-		if (_scale)
-			renderer.render("showScaleCtrl", isShowScaleCtrl());
-		if (_overview)
-			renderer.render("showOverviewCtrl", isShowOverviewCtrl());
-		if (!_enableDragging)
-			renderer.render("enableDragging", isEnableDragging());
-		if (_continuousZoom)
-			render(renderer, "continuousZoom", isContinuousZoom());
-		if (!_doubleClickZoom)
-			renderer.render("doubleClickZoom", isDoubleClickZoom());
-		if (!_scrollWheelZoom)
-			renderer.render("scrollWheelZoom", isScrollWheelZoom());
-		if (_enableGoogleBar)
-			render(renderer, "enableGoogleBar", isEnableGoogleBar());
-		if (!"normal".equals(_mapType))
-			render(renderer, "mapType", getMapType());
-		if (_satellite)
-			renderer.render("satellite", isSatellite());
-		if (!_hybrid)
-			renderer.render("hybrid", isHybrid());
-		if (!_physical)
-			renderer.render("physical", isPhysical());
-		if (!_normal)
-			renderer.render("normal", isNormal());
-		if (_sensor)
-			renderer.render("sensor", true);
-		if (!Strings.isBlank(_baseDomain))
-			renderer.render("baseDomain", _baseDomain);
-		if (!Strings.isBlank(_language))
-			renderer.render("language", _language);
+	protected Object newExtraCtrl() {
+		return new ExtraCtrl();
 	}
-	/** Processes an AU request.
-	 *
-	 * <p>Default: in addition to what are handled by {@link XulElement#service},
-	 * it also handles onSelect.
-	 * @since 5.0.0
+	/** A utility class to implement {@link #getExtraCtrl}.
+	 * It is used only by component developers.
 	 */
-	public void service(org.zkoss.zk.au.AuRequest request, boolean everError) {
-		final String cmd = request.getCommand();
-		if (cmd.equals("onMapMove")) {
-			final MapMoveEvent evt = MapMoveEvent.getMapMoveEvent(request);
-			final double lat = evt.getLat();
-			final double lng = evt.getLng();
-			final double swlat = evt.getSwLat();
-			final double swlng = evt.getSwLng();
-			final double nelat = evt.getNeLat();
-			final double nelng = evt.getNeLng();
-			setCenterByClient(lat, lng);
-			setBoundsByClient(swlat, swlng, nelat, nelng);
-			Events.postEvent(evt);
-		} else if (cmd.equals("onMapZoom")) {
-			final MapZoomEvent evt = MapZoomEvent.getMapZoomEvent(request);
-			final int zoom = evt.getZoom();
-			setZoomByClient(zoom);
-			Events.postEvent(evt);
-		} else if (cmd.equals("onInfoChange")) {
-			final InfoChangeEvent evt = InfoChangeEvent.getInfoChangeEvent(request);
-			setInfoByClient(evt.getInfo());
-			Events.postEvent(evt);
-		} else if (cmd.equals("onMapClick")
-				|| cmd.equals("onMapDoubleClick")
-				|| cmd.equals("onMapRightClick")) {
-			final MapMouseEvent evt = MapMouseEvent.getMapMouseEvent(request);
-			Events.postEvent(evt);
-		} else if (cmd.equals(Events.ON_SELECT)) {
-			SelectEvent evt = SelectEvent.getSelectEvent(request);
-			Set selItems = evt.getSelectedItems();
+	protected class ExtraCtrl extends HtmlBasedComponent.ExtraCtrl
+	implements Selectable {
+		//-- Selectable --//
+		public void selectItemsByClient(Set selItems) {
 			final Component mitem =  selItems == null || selItems.isEmpty() ? 
-					null : (Component) selItems.iterator().next();
+				null : (Component) selItems.iterator().next();
 			setSelectedItem(mitem);
-			Events.postEvent(evt);
-		} else if (cmd.equals("onMapTypeChange")) {
-			final MapTypeChangeEvent evt = MapTypeChangeEvent.getMapTypeChangeEvent(request);
-			setMapTypeByClient(evt.getType());
-			Events.postEvent(evt);
-		} else if (cmd.equals("onMapDrop")) {
-			final MapDropEvent evt = MapDropEvent.getMapDropEvent(request);
-			Events.postEvent(evt);
-		} else
-			super.service(request, everError);
+		}
+
+		public void clearSelectionByClient() {
+			//do nothing
+		}
 	}
 
 	//register the Gmaps related event
-	static {
-		addClientEvent(Gmaps.class, "onMapMove", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapZoom", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onInfoChange", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapClick", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapDoubleClick", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapRightClick", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapDrop", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, "onMapTypeChange", CE_DUPLICATE_IGNORE);
-		addClientEvent(Gmaps.class, Events.ON_SELECT, CE_DUPLICATE_IGNORE);
+	static {	
+		new MapMoveCommand("onMapMove", Command.IGNORE_OLD_EQUIV);
+		new MapZoomCommand("onMapZoom", Command.IGNORE_OLD_EQUIV);
+		new InfoChangeCommand("onInfoChange", Command.IGNORE_OLD_EQUIV);
+		new MapClickCommand("onMapClick", Command.IGNORE_OLD_EQUIV);
+		new MapDoubleClickCommand("onMapDoubleClick", Command.IGNORE_OLD_EQUIV);
+		new MapRightClickCommand("onMapRightClick", Command.IGNORE_OLD_EQUIV);
+		new MarkerDropCommand("onMarkerDrop", Command.IGNORE_OLD_EQUIV);
+		new MapDropCommand("onMapDrop", Command.IGNORE_OLD_EQUIV);
+		new MapOpenCommand("onMapOpen", Command.IGNORE_OLD_EQUIV);
+		new MapTypeChangeCommand("onMapTypeChange", Command.IGNORE_OLD_EQUIV);
 	}
 }

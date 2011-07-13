@@ -3,6 +3,10 @@
 	<name>gmapsz</name>
 	<comment></comment>
 	<projects>
+		<project>zcommon</project>
+		<project>zk</project>
+		<project>zul</project>
+		<project>zweb</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -22,9 +26,9 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.eclipse.jem.workbench.JavaEMFNature</nature>
-		<nature>org.eclipse.wst.common.modulecore.ModuleCoreNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.wst.common.project.facet.core.nature</nature>
+		<nature>org.eclipse.wst.common.modulecore.ModuleCoreNature</nature>
+		<nature>org.eclipse.jem.workbench.JavaEMFNature</nature>
 	</natures>
 </projectDescription>

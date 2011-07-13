@@ -19,10 +19,15 @@ Copyright (C) 2007 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.gmaps;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
+import org.zkoss.lang.Objects;
+import org.zkoss.util.CollectionsX;
+import org.zkoss.xml.HTMLs;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zk.ui.UiException;
 
 /**
@@ -32,7 +37,6 @@ import org.zkoss.zk.ui.UiException;
  * @since 2.0_7
  */
 public class Gpolygon extends Gpolyline {
-	private static final long serialVersionUID = 200807091638L;
 	private boolean _outline = true;
 	private boolean _fill = true;
 	private String _fillColor = "#808080"; //default to dark gray
@@ -55,7 +59,7 @@ public class Gpolygon extends Gpolyline {
 	public void setOutline(boolean b) {
 		if (_outline != b) {
 			_outline = b;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -74,7 +78,7 @@ public class Gpolygon extends Gpolyline {
 	public void setFill(boolean b) {
 		if (_fill != b) {
 			_fill = b;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -94,13 +98,12 @@ public class Gpolygon extends Gpolyline {
 		if (color == null) color = "#808080";
 		if (!color.equals(_fillColor)) {
 			this._fillColor = color;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
 	/**
 	 * Returns fill opacity from 0 (transparent) to 100 (solid), default to 50.
-	 * @return fill opacity level
 	 */
 	public int getFillOpacity() {
 		return _fillOpacity;
@@ -108,7 +111,6 @@ public class Gpolygon extends Gpolyline {
 	
 	/**
 	 * Sets fill opacity from 0 (transparent) to 100 (solid), default to 50.
-	 * @param op the fill opacity level 
 	 */
 	public void setFillOpacity(int op) {
 		if (op < 0 || op > 100) {
@@ -116,7 +118,7 @@ public class Gpolygon extends Gpolyline {
 		}
 		if (_fillOpacity != op) {
 			_fillOpacity = op;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -180,22 +182,19 @@ public class Gpolygon extends Gpolyline {
 		return _encodedLevels;
 	}
 	
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-		
-		render(renderer, "fill", isFill());
-		render(renderer, "outline", isOutline());
-		render(renderer, "fillColor", getFillColor());
-		render(renderer, "fillOpacity", new Double(getFillOpacity() / 100.0));
-	}
-	
-	protected void prepareRerender(Map info) {
-		super.prepareRerender(info);
-		
-		info.put("fill", Boolean.valueOf(isFill()));
-		info.put("outline", Boolean.valueOf(isOutline()));
-		info.put("fillColor", getFillColor());
-		info.put("fillOpacity", new Double(getFillOpacity() / 100.0));
+	/** Returns the HTML attributes for this tag.
+	 * <p>Used only for component development, not for application developers.
+	 */
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(128);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		HTMLs.appendAttribute(sb, "z.fl", isFill());
+		HTMLs.appendAttribute(sb, "z.ol", isOutline());
+		HTMLs.appendAttribute(sb, "z.fcr", getFillColor());
+		HTMLs.appendAttribute(sb, "z.op", ""+(getFillOpacity() / 100.0));
+		return sb.toString();
 	}
 }

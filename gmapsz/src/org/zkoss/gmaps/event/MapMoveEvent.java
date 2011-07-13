@@ -18,13 +18,8 @@ Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.gmaps.event;
 
-import java.util.Map;
-
-import org.zkoss.zk.au.AuRequest;
-import org.zkoss.zk.mesg.MZk;
-import org.zkoss.zk.ui.Component;
-import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
+import org.zkoss.zk.ui.Component;
 
 /**
  * Represents a Google Maps {@link org.zkoss.gmaps.Gmaps} related event which 
@@ -34,28 +29,6 @@ import org.zkoss.zk.ui.event.Event;
  */
 public class MapMoveEvent extends Event {
 	private final double _lat, _lng, _swlat, _swlng, _nelat, _nelng;
-
-	/** Converts an AU request to a event.
-	 * @since 5.0.0
-	 */
-	public static final MapMoveEvent getMapMoveEvent(AuRequest request) {
-		final Component comp = request.getComponent();
-		if (comp == null)
-			throw new UiException(MZk.ILLEGAL_REQUEST_COMPONENT_REQUIRED, request);
-		final Map data = request.getData();
-		if (data == null)
-			throw new UiException(MZk.ILLEGAL_REQUEST_WRONG_DATA,
-				new Object[] {data, request});
-
-		//bug #2930047 Gmaps Exception when set lat/lng to integer
-		final double lat = ((Number)data.get("lat")).doubleValue();
-		final double lng = ((Number)data.get("lng")).doubleValue();
-		final double swlat = ((Number)data.get("swlat")).doubleValue();
-		final double swlng = ((Number)data.get("swlng")).doubleValue();
-		final double nelat = ((Number)data.get("nelat")).doubleValue();
-		final double nelng = ((Number)data.get("nelng")).doubleValue();
-		return new MapMoveEvent(request.getCommand(), comp, lat, lng, swlat, swlng, nelat, nelng);
-	}
 
 	/** Constructs a Google Maps moving relevant event.
 	 */

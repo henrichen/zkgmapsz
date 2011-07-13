@@ -19,16 +19,13 @@ Copyright (C) 2008 Potix Corporation. All Rights Reserved.
 
 package org.zkoss.gmaps;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.zkoss.lang.Objects;
-import org.zkoss.util.media.Media;
+import org.zkoss.lang.Strings;
+import org.zkoss.xml.HTMLs;
+import org.zkoss.zk.ui.HtmlBasedComponent;
+import org.zkoss.zk.ui.AbstractComponent;
 import org.zkoss.zk.ui.Desktop;
-import org.zkoss.zk.ui.ext.render.DynamicMedia;
-import org.zkoss.zul.impl.Padding;
-import org.zkoss.zul.impl.Utils;
-import org.zkoss.zul.impl.XulElement;
+import org.zkoss.zk.ui.UiException;
 
 /**
  * Google Maps support Gimage.
@@ -36,8 +33,7 @@ import org.zkoss.zul.impl.XulElement;
  * @author henrichen
  * @since 2.0_7
  */
-public class Gimage extends XulElement implements Mapitem {
-	private static final long serialVersionUID = 200801071632L;
+public class Gimage extends HtmlBasedComponent implements Mapitem {
 	protected double _swlat = 37.4419;
 	protected double _swlng = -122.1419;
 	protected double _nelat = 37.4419;
@@ -83,7 +79,7 @@ public class Gimage extends XulElement implements Mapitem {
 	public void setSwlat(double swlat) {
 		if (_swlat != swlat) {
 			_swlat = swlat;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -100,7 +96,7 @@ public class Gimage extends XulElement implements Mapitem {
 	public void setSwlng(double swlng) {
 		if (_swlng != swlng) {
 			_swlng = swlng;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -117,7 +113,7 @@ public class Gimage extends XulElement implements Mapitem {
 	public void setNelat(double nelat) {
 		if (_nelat != nelat) {
 			_nelat = nelat;
-			smartRerender();
+			invalidate();
 		}
 	}
 	/**
@@ -134,7 +130,7 @@ public class Gimage extends XulElement implements Mapitem {
 	public void setNelng(double nelng) {
 		if (_nelng != nelng) {
 			_nelng = nelng;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -155,13 +151,22 @@ public class Gimage extends XulElement implements Mapitem {
 		if (src != null && src.length() == 0)
 			src = null;
 
-		if (_image != null || !Objects.equals(_src, src)) {
+		if (!Objects.equals(_src, src)) {
 			_src = src;
-			_image = null;
-			smartRerender();
+			if (_image == null)
+				invalidate();
+				//_src is meaningful only if _image is null
 		}
 	}
-	
+	/** Returns the encoded src ({@link #getSrc}).
+	 */
+	private String getEncodedSrc() {
+		final Desktop dt = getDesktop(); //it might not belong to any desktop
+		return _image != null ? getContentSrc(): //already encoded
+			dt != null ? dt.getExecution().encodeURL(
+				_src != null ? _src: "~./img/spacer.gif"): "";
+	}
+
 	/** Sets the content directly.
 	 * Default: null.
 	 *
@@ -172,7 +177,7 @@ public class Gimage extends XulElement implements Mapitem {
 		if (image != _image) {
 			_image = image;
 			if (_image != null) ++_imgver; //enforce browser to reload image
-			smartRerender();
+			invalidate();
 		}
 	}
 	/** Returns the content set by {@link #setContent}.
@@ -183,64 +188,60 @@ public class Gimage extends XulElement implements Mapitem {
 		return _image;
 	}
 
+	/** Returns the encoded URL for the current image content.
+	 * Don't call this method unless _image is not null;
+	 *
+	 * <p>Used only for component template, not for application developers.
+	 */
+	private String getContentSrc() {
+		return getDynamicMediaURI(
+			this, _imgver, _image.getName(), _image.getFormat());
+	}
+	
+	//To avoid ZK version 3.0.2 dependency, we copy-n-paste the org.zkoss.zul.impl.Utils#getDynamicMediaURI() here;
+	/*package*/ static String getDynamicMediaURI(AbstractComponent comp,
+	int version, String name, String format) {
+		final Desktop desktop = comp.getDesktop();
+		if (desktop == null) return ""; //no avail at client
+
+		final StringBuffer sb = new StringBuffer(64).append('/');
+		Strings.encode(sb, version);
+		if (name != null || format != null) {
+			sb.append('/');
+			boolean bExtRequired = true;
+			if (name != null && name.length() != 0) {
+				sb.append(name.replace('\\', '/'));
+				bExtRequired = name.lastIndexOf('.') < 0;
+			} else {
+				sb.append(comp.getId());
+			}
+			if (bExtRequired && format != null)
+				sb.append('.').append(format);
+		}
+		return desktop.getDynamicMediaURI(comp, sb.toString()); //already encoded
+	}
+
+	//-- super --//
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(128);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		HTMLs.appendAttribute(sb, "z.src", getEncodedSrc());
+		HTMLs.appendAttribute(sb, "z.swlat", ""+getSwlat());
+		HTMLs.appendAttribute(sb, "z.swlng", ""+getSwlng());
+		HTMLs.appendAttribute(sb, "z.nelat", ""+getNelat());
+		HTMLs.appendAttribute(sb, "z.nelng", ""+getNelng());
+		HTMLs.appendAttribute(sb, "z.pid", getParent().getUuid());
+
+		return sb.toString();
+	}
+
 	//-- Component --//
 	/** Default: not childable.
 	 */
 	public boolean isChildable() {
 		return false;
-	}
-
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-		render(renderer, "src", getEncodedURL());
-		render(renderer, "swlat", new Double(getSwlat()));
-		render(renderer, "swlng", new Double(getSwlng()));
-		render(renderer, "nelat", new Double(getNelat()));
-		render(renderer, "nelng", new Double(getNelng()));
-	}
-	
-	/** Returns the encoded URL of the image (never null).
-	 */
-	private String getEncodedURL() {
-		if (_image != null)
-			return Utils.getDynamicMediaURI( //already encoded
-				this, _imgver, "c/" + _image.getName(), _image.getFormat());
-
-		final Desktop dt = getDesktop(); //it might not belong to any desktop
-		return dt != null ? dt.getExecution()
-			.encodeURL(_src != null ? _src: "~./img/spacer.gif"): "";
-	}
-
-	private class EncodedURL implements org.zkoss.zk.ui.util.DeferredValue {
-		public Object getValue() {
-			return getEncodedURL();
-		}
-	}
-
-	public Object getExtraCtrl() {
-		return new ExtraCtrl();
-	}
-
-	/** A utility class to implement {@link #getExtraCtrl}.
-	 * It is used only by component developers.
-	 */
-	protected class ExtraCtrl extends XulElement.ExtraCtrl
-	implements DynamicMedia {
-		//-- DynamicMedia --//
-		public Media getMedia(String pathInfo) {
-			return _image;
-		}
-	}
-	
-	private void smartRerender() {
-		final Map info = new HashMap();
-		info.put("src", new EncodedURL().getValue());
-		info.put("swlat", new Double(_swlat));
-		info.put("swlng", new Double(_swlng));
-		info.put("nelat", new Double(_nelat));
-		info.put("nelng", new Double(_nelng));
-		
-		smartUpdate("rerender_", info);
 	}
 }

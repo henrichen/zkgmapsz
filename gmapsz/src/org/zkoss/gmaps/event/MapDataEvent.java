@@ -19,6 +19,7 @@ Copyright (C) 2008 Potix Corporation. All Rights Reserved.
 package org.zkoss.gmaps.event;
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.zkoss.gmaps.MapModel;
 

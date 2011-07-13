@@ -19,6 +19,7 @@ Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 package org.zkoss.gmaps;
 
 import org.zkoss.lang.Objects;
+import org.zkoss.xml.HTMLs;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.UiException;
 import org.zkoss.zul.impl.XulElement;
@@ -58,7 +59,7 @@ public class Ginfo extends XulElement implements Mapitem {
 		if (content == null) content = "";
 		if (!Objects.equals(_content, content)) {
 			_content = content;
-			smartUpdate("content", _content);
+			smartUpdate("z.content", _content);
 		}
 	}
 
@@ -77,7 +78,7 @@ public class Ginfo extends XulElement implements Mapitem {
 			update = true;
 		}
 		if (update) {
-			smartUpdate("anchor", getAnchor());
+			smartUpdate("z.anch", getAnchor());
 		}
 	}
 
@@ -86,7 +87,7 @@ public class Ginfo extends XulElement implements Mapitem {
 	public void setLat(double lat) {
 		if (lat != _lat) {
 			_lat = lat;
-			smartUpdate("anchor", getAnchor());
+			smartUpdate("z.anch", getAnchor());
 		}
 	}
 	
@@ -101,7 +102,7 @@ public class Ginfo extends XulElement implements Mapitem {
 	public void setLng(double lng) {
 		if (lng != _lng) {
 			_lng = lng;
-			smartUpdate("anchor", getAnchor());
+			smartUpdate("z.anch", getAnchor());
 		}
 	}
 	
@@ -117,8 +118,8 @@ public class Ginfo extends XulElement implements Mapitem {
 		if (gmaps != null) {
 			if (b) {
 				gmaps.openInfo(this);
-			} else {
-				smartUpdate("open", b);
+			} else if (gmaps.getInfo() == this) {
+				gmaps.closeInfo();
 			}
 		}
 		_open = b;
@@ -135,11 +136,26 @@ public class Ginfo extends XulElement implements Mapitem {
         return (gmaps != null && gmaps.getInfo() == this) || _open;
     }
    
-	/** Returns the info anchor point in double[] array where [0] is lat and [1] is lng ; used by component developers
+	/** get the Maps center in String form lat,lng; used by component developers
 	 * only.
 	 */
-	private double[] getAnchor() {
-		return new double[] {_lat, _lng};
+	private String getAnchor() {
+		return ""+_lat+","+_lng;
+	}
+
+	/** Returns the HTML attributes for this tag.
+	 * <p>Used only for component development, not for application developers.
+	 */
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(64);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		HTMLs.appendAttribute(sb, "z.anch", getAnchor());
+		HTMLs.appendAttribute(sb, "z.pid", getParent().getUuid());
+		HTMLs.appendAttribute(sb, "z.open", _open ? "true" : null);
+		return sb.toString();
 	}
 
 	/*package*/ boolean isGinfo() {
@@ -157,13 +173,5 @@ public class Ginfo extends XulElement implements Mapitem {
 		if (parent != null && !(parent instanceof Gmaps))
 			throw new UiException("Wrong parent: "+parent);
 		super.setParent(parent);
-	}
-
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-		render(renderer, "anchor", getAnchor());
-		render(renderer, "content", getContent());
-		render(renderer, "open", _open);
 	}
 }

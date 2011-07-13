@@ -33,7 +33,6 @@ import org.zkoss.io.Serializables;
  * @since 2.0_9
  */
 abstract public class AbstractMapModel implements MapModel, java.io.Serializable {
-	private static final long serialVersionUID = 200807101306L;
 	private transient List _listeners = new LinkedList();
 
 	/** Fires a {@link MapDataEvent} for all registered listener

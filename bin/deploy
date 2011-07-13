@@ -13,7 +13,7 @@
 #Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 #
 #{{IS_RIGHT
-#	This program is distributed under GPL Version 3.0 in the hope that
+#	This program is distributed under GPL Version 2.0 in the hope that
 #	it will be useful, but WITHOUT ANY WARRANTY.
 #}}IS_RIGHT
 #
@@ -73,29 +73,15 @@ for f in $*; do
 done
 
 if [ "$jar_found" = "true" ] ; then
-	setting=build.setting.local
-	if [ ! -f $setting ] ; then
-		setting=build.setting
-	fi
-	if [ -f $setting ] ; then
-		service=$(grep '^start.service' $setting)
-		service=${service#start.service=}
-	fi
-
-	if [ "$service" != "" ] ; then
-		net stop "$service"
-	fi
+	net stop "Apache Tomcat"
 
 	for f in $*; do
 		f=${f%/}
 		if [ ! -f dist/lib/$f.jad ] && [ -f dist/lib/$f.jar ] ; then
 			#echo "cp dist/lib/$f.jar /usr/tomcat/shared/lib"
-			chmod 644 dist/lib/$f.jar
 			cp -p -u -v -f dist/lib/$f.jar /usr/tomcat/shared/lib
 		fi
 	done
 
-	if [ "$service" != "" ] ; then
-		net start "$service"
-	fi
+	net start "Apache Tomcat"
 fi

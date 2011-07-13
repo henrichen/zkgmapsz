@@ -18,14 +18,11 @@ Copyright (C) 2008 Potix Corporation. All Rights Reserved.
 */
 package org.zkoss.gmaps;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.zkoss.lang.Objects;
+import org.zkoss.xml.HTMLs;
 import org.zkoss.zk.ui.Desktop;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zk.ui.UiException;
-import org.zkoss.zul.impl.Utils;
-import org.zkoss.zul.impl.XulElement;
 
 /**
  * A rectangular image on the Gmaps whose position remains fixed on the screen 
@@ -33,7 +30,7 @@ import org.zkoss.zul.impl.XulElement;
  * @author henrichen
  * @see Gimage
  */
-public class Gscreen extends XulElement implements Mapitem {
+public class Gscreen extends HtmlBasedComponent implements Mapitem {
 	private static final long serialVersionUID = 200807021855L;
 	protected String _screenX = "0";
 	protected String _screenY = "0";
@@ -106,7 +103,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(screenX, _screenX)) {
 			validate(screenX, "screenX");
 			_screenX = screenX;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -137,7 +134,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(screenY, _screenY)) {
 			validate(screenY, "screenY");
 			_screenY = screenY;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -170,7 +167,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(offsetX, _offsetX)) {
 			validate(offsetX, "offsetX");
 			_offsetX = offsetX;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -203,7 +200,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(offsetY, _offsetY)) {
 			validate(offsetY, "offsetY");
 			_offsetY = offsetY;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -221,7 +218,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(width, _width)) {
 			validate(width, "width");
 			_width = width;
-			smartRerender();
+			invalidate();
 		}
 	}
 	
@@ -246,7 +243,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (!Objects.equals(height, _height)) {
 			validate(height, "height");
 			_height = height;
-			smartRerender();
+			invalidate();
 		}
 	}
 
@@ -275,12 +272,22 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (src != null && src.length() == 0)
 			src = null;
 
-		if (_image != null || !Objects.equals(_src, src)) {
+		if (!Objects.equals(_src, src)) {
 			_src = src;
-			_image = null;
-			smartRerender();
+			if (_image == null)
+				invalidate();
+				//_src is meaningful only if _image is null
 		}
 	}
+	/** Returns the encoded src ({@link #getSrc}).
+	 */
+	private String getEncodedSrc() {
+		final Desktop dt = getDesktop(); //it might not belong to any desktop
+		return _image != null ? getContentSrc(): //already encoded
+			dt != null ? dt.getExecution().encodeURL(
+				_src != null ? _src: "~./img/spacer.gif"): "";
+	}
+
 	/** Sets the content directly.
 	 * Default: null.
 	 *
@@ -291,7 +298,7 @@ public class Gscreen extends XulElement implements Mapitem {
 		if (image != _image) {
 			_image = image;
 			if (_image != null) ++_imgver; //enforce browser to reload image
-			smartRerender();
+			invalidate();
 		}
 	}
 	/** Returns the content set by {@link #setContent}.
@@ -300,6 +307,35 @@ public class Gscreen extends XulElement implements Mapitem {
 	 */
 	public org.zkoss.image.Image getContent() {
 		return _image;
+	}
+
+	/** Returns the encoded URL for the current image content.
+	 * Don't call this method unless _image is not null;
+	 *
+	 * <p>Used only for component template, not for application developers.
+	 */
+	private String getContentSrc() {
+		return Gimage.getDynamicMediaURI(
+			this, _imgver, _image.getName(), _image.getFormat());
+	}
+	
+	//-- super --//
+	public String getOuterAttrs() {
+		final String attrs = super.getOuterAttrs();
+		final StringBuffer sb = new StringBuffer(128);
+		if (attrs != null) {
+			sb.append(attrs);
+		}
+		HTMLs.appendAttribute(sb, "z.src", getEncodedSrc());
+		HTMLs.appendAttribute(sb, "z.sx", ""+getScreenX());
+		HTMLs.appendAttribute(sb, "z.sy", ""+getScreenY());
+		HTMLs.appendAttribute(sb, "z.ox", ""+getOffsetX());
+		HTMLs.appendAttribute(sb, "z.oy", ""+getOffsetY());
+		HTMLs.appendAttribute(sb, "z.w", ""+getWidth());
+		HTMLs.appendAttribute(sb, "z.h", ""+getHeight());
+		HTMLs.appendAttribute(sb, "z.pid", getParent().getUuid());
+
+		return sb.toString();
 	}
 
 	//-- Component --//
@@ -332,49 +368,5 @@ public class Gscreen extends XulElement implements Mapitem {
 		} catch (NumberFormatException ex) {
 			throw new UiException(name+" allow px, or % only: " + arg);
 		}
-	}
-	
-	protected void renderProperties(org.zkoss.zk.ui.sys.ContentRenderer renderer)
-	throws java.io.IOException {
-		super.renderProperties(renderer);
-
-		render(renderer, "src", getEncodedURL());
-		render(renderer, "screenX", getScreenX());
-		render(renderer, "screenY", getScreenY());
-		render(renderer, "offsetX", getOffsetX());
-		render(renderer, "offsetY", getOffsetY());
-		render(renderer, "width", getWidth());
-		render(renderer, "height", getHeight());
-	}
-	
-	/** Returns the encoded URL of the image (never null).
-	 */
-	private String getEncodedURL() {
-		if (_image != null)
-			return Utils.getDynamicMediaURI( //already encoded
-				this, _imgver, "c/" + _image.getName(), _image.getFormat());
-
-		final Desktop dt = getDesktop(); //it might not belong to any desktop
-		return dt != null ? dt.getExecution()
-			.encodeURL(_src != null ? _src: "~./img/spacer.gif"): "";
-	}
-
-	private class EncodedURL implements org.zkoss.zk.ui.util.DeferredValue {
-		public Object getValue() {
-			return getEncodedURL();
-		}
-	}
-	
-	private void smartRerender() {
-		final Map info = new HashMap();
-		info.put("src", new EncodedURL());
-		info.put("screenX", getScreenX());
-		info.put("screenY", getScreenY());
-		info.put("offsetX", getOffsetX());
-		info.put("offsetY", getOffsetY());
-		info.put("width", getWidth());
-		info.put("height", getHeight());
-		
-		smartUpdate("rerender_", info);
 	}
 }

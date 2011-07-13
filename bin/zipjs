@@ -3,7 +3,7 @@
 #
 #{{IS_NOTE
 #	Purpose:
-#		Copy and compress Javascript and CSS
+#		Copy and compress Javascript
 #	Description:
 #		
 #	History:
@@ -13,20 +13,20 @@
 #Copyright (C) 2006 Potix Corporation. All Rights Reserved.
 #
 #{{IS_RIGHT
-#	This program is distributed under GPL Version 3.0 in the hope that
+#	This program is distributed under GPL Version 2.0 in the hope that
 #	it will be useful, but WITHOUT ANY WARRANTY.
 #}}IS_RIGHT
 #
-if [ $# != 5 ] ; then
+if [ $# != 3 ] ; then
 	echo "Usage:"
-	echo "  zipjs jarfl bshjarfl bshcmd srcdir dstdir"
+	echo "  zipjs jarfl srcdir dstdir"
 	echo
 	echo "All files are copied from one directory to another."
 	echo "The JavaScript files are compressed during copying."
 	exit 1
 fi
 
-if [ ! -d "$4" ] ; then #nothing to copy
+if [ ! -d "$2" ] ; then #nothing to copy
 	exit 0
 fi
 
@@ -34,15 +34,7 @@ jarfl="$1"
 if [ "${jarfl#/}" = "$jarfl" ] ; then
 	jarfl="$(pwd)/$jarfl"
 fi
-bshjar="$2"
-if [ "${bshjar#/}" = "$bshjar" ] ; then
-	bshjar="$(pwd)/$bshjar"
-fi
-bshcmd="$3"
-if [ "${bshcmd#/}" = "$bshcmd" ] ; then
-	bshcmd="$(pwd)/$bshcmd"
-fi
-dstdir="$5"
+dstdir="$3"
 if [ "${dstdir#/}" = "$dstdir" ] ; then
 	dstdir="$(pwd)/$dstdir"
 fi
@@ -51,20 +43,10 @@ if [ ! -f "$jarfl" ] ; then
 	echo "$jarfl not found"
 	exit 1
 fi
-if [ ! -f "$bshjar" ] ; then
-	echo "$bshjar not found"
-	exit 1
-fi
-if [ ! -f "$bshcmd" ] ; then
-	echo "$bshcmd not found"
-	exit 1
-fi
 
 #convert jarfl to window format
 if [ "$TERM" = "cygwin" ] ; then
 	jarfl=$(cygpath -wa $jarfl)
-	bshjar=$(cygpath -wa $bshjar)
-	bshcmd=$(cygpath -wa $bshcmd)
 fi
 
 failed=false
@@ -72,9 +54,9 @@ failed=false
 function zips
 {
 	local dst="$1"
-	local parent=$4
+	local parent=$2
 	for f in *; do
-		if [ "$f" != "CVS" ] && [ "$f" != ".svn" ] ; then
+		if [ "$f" != "CVS" ] ; then
 			dstfl=$dst/$f
 			if [ -d "$f" ] ; then
 				(
@@ -88,27 +70,18 @@ function zips
 					local cvt=false
 					if [ "${f%.js}" != "$f" ] ; then
 						cvt=true
-						type=
-					elif [ "${f%.css.dsp}" != "$f" ] || [ "${f%.css}" != "$f" ] ; then
-						cvt=true
-						type="--type css"
 					fi
 					if [ $cvt = true ] ; then
 						echo Compress $f
 						if [ "$TERM" = "cygwin" ] ; then
 							dstfl=$(cygpath -wa $dstfl)
 						fi
-						java -jar $jarfl --charset UTF-8 $type "$f" -o "$dstfl" 2>&1
+						java -jar $jarfl --charset UTF-8 --line-break 0 "$f" -o "$dstfl" 2>&1
 						if [ $? != 0 ] ; then
 							echo "Warning failed to compress, use copy instead: $f"
 							cvt=false
-						elif [ "$type" = "" ] ; then #JS
-							if [ "$TERM" = "cygwin" ] ; then
-								srcfile=$(cygpath -wa $dst/${f%.js}.src.js)
-  							else
-								srcfile=$dst/${f%.js}.src.js
-							fi
-							java -classpath $bshjar bsh.Interpreter $bshcmd "./$f" "$srcfile"
+						else
+							cp -p ./"$f" $dst/${f%.js}-org.js
 								#always make a copy so we can use them if we want to debug them
 						fi
 					fi
@@ -128,7 +101,7 @@ function zips
 	done
 	cd ..
 }
-cd $4
+cd $2
 zips "$dstdir"
 if [ $failed = true ] ; then
 	exit 1

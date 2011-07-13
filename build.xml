@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project [
-	<!ENTITY properties SYSTEM "file:build.prop.xml">
-	<!ENTITY targets SYSTEM "file:build.target.xml">
+	<!ENTITY properties SYSTEM "build.prop.xml">
+	<!ENTITY targets SYSTEM "build.target.xml">
 ]>
 
 <!-- build.xml
@@ -56,6 +56,15 @@ Copyright (C) 2002 Potix Corporation. All Rights Reserved.
 		<available file="${dist.lib.ext.dir}/.svn" property="lib.ext.svn.dir.exist"/>
 
 		<available file="${src.archive.dir}/META-INF/${jad.name}" property="jad.exist"/>
+
+		<condition property="war.dir" value="${src.archive.dir}">
+			<available file="${src.archive.dir}" type="dir"/>
+		</condition>
+		<condition property="war.dir" value="WebContent">
+			<not>
+				<available file="${src.archive.dir}" type="dir"/>
+			</not>
+		</condition>
 
 		<condition property="copy.web.jar.required">
 			<not>
