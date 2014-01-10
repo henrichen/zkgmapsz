@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- zk.xml
+	Purpose:
+		
+	Description:
+		
+	History:
+		Tue Jan 31 12:29:07     2012, Created by benbai
+
+Copyright (C) 2012 Potix Corporation. All Rights Reserved.
+-->
+
+<zk>
+	<session-config>
+	  <timer-keep-alive>true</timer-keep-alive>
+	</session-config>
+</zk>

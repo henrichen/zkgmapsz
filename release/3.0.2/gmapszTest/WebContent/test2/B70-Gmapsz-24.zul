@@ -1,0 +1,23 @@
+<?page title="new page title" contentType="text/html;charset=UTF-8"?>
+<zk>
+	<window id="mapWin" height="100%" width="100%">
+<attribute name="onCreate">
+	map.panTo(50.752213, 10.437012);
+	map.setZoom(6);
+	org.zkoss.gmaps.Gmarker gmark = new org.zkoss.gmaps.Gmarker();
+	gmark.setParent(map);
+	gmark.setLat(47.698710);
+	gmark.setLng(10.3276800);
+	gmark.setTooltiptext("This is a tooltip for gmarker");
+	org.zkoss.gmaps.Gpolygon gpoly = new org.zkoss.gmaps.Gpolygon();
+	gpoly.setParent(map);
+	gpoly.addPoint(47.0, 10.0, 3);
+	gpoly.addPoint(47.0, 10.5, 3);
+	gpoly.addPoint(47.5, 10.5, 3);
+	gpoly.addPoint(47.5, 10.0, 3);
+	gpoly.addPoint(47.0, 10.0, 3);
+	gpoly.setTooltiptext("This is a tooltip for gpoly");
+</attribute>
+		<gmaps id="map" width="100%" height="100%"></gmaps>
+	</window>
+</zk>
